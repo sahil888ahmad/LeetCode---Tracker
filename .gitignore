@@ -1,0 +1,9 @@
+node_modules/
+.env
+.dev.vars
+dist/
+.wrangler/
+build/
+.DS_Store
+scratch-register.js
+test-*.js

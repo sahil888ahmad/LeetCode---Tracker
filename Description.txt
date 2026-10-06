@@ -1,0 +1,630 @@
+Build a full-stack web application called **LeetCode Tracker**.
+
+## Goal
+
+Create a website where users can enter their LeetCode username and phone number. The application should periodically check the user's LeetCode profile/submissions and detect when a new problem has been solved. Whenever a new accepted submission is detected, send a WhatsApp notification to the registered phone number.
+
+The application should be designed as a real, deployable project and should use free-tier services wherever possible.
+
+## Important Requirements
+
+- Use only free/open-source technologies and free tiers.
+- The application must be deployable.
+- Do not use paid services unless absolutely required for WhatsApp messaging.
+- Keep the architecture simple, scalable, and beginner-friendly.
+- Do not over-engineer the project.
+- Use environment variables for all API keys, tokens, database credentials, and secrets.
+- Never expose secrets in frontend code.
+- Write clean, modular, production-quality code.
+- Explain important implementation decisions.
+- Provide setup instructions after completing each major stage.
+
+---
+
+# Tech Stack
+
+## Frontend
+
+- React
+- Vite
+- Tailwind CSS
+- JavaScript or TypeScript
+- React Router if routing is required
+
+## Backend
+
+- Cloudflare Workers
+- JavaScript/TypeScript
+- REST API architecture
+
+## Database
+
+- Supabase PostgreSQL
+
+## Scheduler
+
+- Cloudflare Cron Triggers
+
+## Notifications
+
+Primary:
+- Meta WhatsApp Cloud API
+
+Fallback/testing option:
+- Telegram Bot API
+
+## Deployment
+
+- Frontend: Cloudflare Pages
+- Backend/API: Cloudflare Workers
+- Database: Supabase
+- Source control: GitHub
+
+The application should work with the free tiers of these services wherever possible.
+
+---
+
+# Core Features
+
+## 1. Landing Page
+
+Create a clean modern landing page.
+
+Include:
+
+- Project name: LeetCode Tracker
+- Short description
+- "Start Tracking" button
+- Features section
+- How it works section
+- Technology section
+
+Design should be:
+
+- Modern
+- Minimal
+- Responsive
+- Mobile friendly
+- Developer/portfolio friendly
+
+---
+
+# 2. Add LeetCode Profile
+
+Create a form:
+
+LeetCode Username:
+[________________]
+
+Phone Number:
+[________________]
+
+[Start Tracking]
+
+Validate:
+
+- Username cannot be empty.
+- Phone number must be valid.
+- Prevent duplicate users where appropriate.
+
+After submission, verify that the LeetCode profile exists before creating the tracker.
+
+---
+
+# 3. User Dashboard
+
+After adding a profile, display:
+
+- LeetCode username
+- Total problems solved
+- Easy solved
+- Medium solved
+- Hard solved
+- Current streak if available
+- Latest submission
+- Recent submissions
+
+Example:
+
+Dashboard
+
+Username: exampleUser
+
+Total Solved: 487
+
+Easy: 180
+Medium: 240
+Hard: 67
+
+Recent Submissions:
+
+Problem | Difficulty | Language | Status | Time
+
+Two Sum | Easy | C++ | Accepted | ...
+3Sum | Medium | C++ | Accepted | ...
+Binary Tree... | Medium | Python | Accepted | ...
+
+---
+
+# 4. Submission Tracking
+
+The backend must periodically check the user's recent LeetCode submissions.
+
+Use the most appropriate publicly accessible LeetCode data/API mechanism available.
+
+Important:
+
+- Do not aggressively scrape LeetCode.
+- Respect rate limits.
+- Only request the minimum amount of information required.
+- Handle API failures gracefully.
+- Do not assume an undocumented endpoint will always remain available.
+- Isolate the LeetCode data-fetching logic into its own service/module so it can easily be replaced later.
+
+The system should identify:
+
+- Submission ID
+- Problem name
+- Problem slug
+- Difficulty
+- Language
+- Submission status
+- Submission timestamp
+
+Only an **Accepted** submission should trigger the WhatsApp notification.
+
+---
+
+# 5. New Problem Detection
+
+The most important functionality:
+
+The system must remember the user's previously processed submissions.
+
+Example:
+
+Previous submission:
+
+submission_id = 12345
+
+Next check:
+
+submission_id = 12346
+
+If submission 12346 is an accepted solution that has not been processed before:
+
+1. Store it in the database.
+2. Mark it as processed.
+3. Send WhatsApp notification.
+
+Do NOT send duplicate notifications for the same submission.
+
+The system must remain idempotent.
+
+---
+
+# 6. WhatsApp Notification
+
+When a new accepted problem is detected, send:
+
+🎉 New LeetCode Problem Solved!
+
+Problem: Two Sum
+Difficulty: Easy
+Language: C++
+Status: Accepted
+
+Keep the notification concise.
+
+Use Meta WhatsApp Cloud API where possible.
+
+Store WhatsApp credentials only in backend environment variables.
+
+Never expose:
+
+- Access tokens
+- API keys
+- Phone number IDs
+- Database credentials
+
+to the frontend.
+
+If WhatsApp API setup requires paid usage or is unavailable during development, implement a notification abstraction so Telegram/email can be used for testing without changing the core tracking system.
+
+---
+
+# 7. Database Design
+
+Use Supabase PostgreSQL.
+
+Create tables similar to:
+
+## users
+
+- id
+- leetcode_username
+- phone_number
+- notification_enabled
+- created_at
+- updated_at
+
+## submissions
+
+- id
+- user_id
+- leetcode_submission_id
+- problem_name
+- problem_slug
+- difficulty
+- language
+- status
+- submitted_at
+- notification_sent
+- created_at
+
+Add appropriate:
+
+- Primary keys
+- Foreign keys
+- Unique constraints
+- Indexes
+
+Prevent duplicate LeetCode submissions.
+
+---
+
+# 8. Scheduled Job
+
+Use Cloudflare Cron Triggers.
+
+Example:
+
+Every 10 minutes:
+
+1. Fetch active users.
+2. Fetch recent submissions for each user.
+3. Compare with stored submissions.
+4. Detect new accepted submissions.
+5. Save new submissions.
+6. Send notification.
+7. Mark notification as sent.
+8. Log errors.
+
+Make the interval configurable.
+
+Do not hard-code secrets or sensitive information.
+
+---
+
+# 9. Backend API
+
+Create endpoints similar to:
+
+POST /api/users
+
+GET /api/users/:id
+
+GET /api/users/:id/submissions
+
+POST /api/users/:id/toggle-notifications
+
+DELETE /api/users/:id
+
+GET /api/health
+
+Keep the API modular.
+
+Use proper HTTP status codes and error responses.
+
+Example:
+
+{
+  "success": false,
+  "error": "LeetCode profile not found"
+}
+
+---
+
+# 10. Error Handling
+
+Handle:
+
+- Invalid LeetCode username
+- LeetCode unavailable
+- API timeout
+- Rate limiting
+- Supabase failure
+- WhatsApp API failure
+- Invalid phone number
+- Duplicate submission
+- Duplicate notification
+- Missing environment variables
+
+The application should fail gracefully.
+
+If WhatsApp fails, do not lose the submission record.
+
+Instead:
+
+- Save the submission.
+- Mark notification_sent = false.
+- Retry later.
+
+---
+
+# 11. Security
+
+Implement basic security best practices.
+
+Requirements:
+
+- Environment variables for secrets
+- Input validation
+- API validation
+- Rate limiting where appropriate
+- CORS configuration
+- No secrets in GitHub
+- `.env` in `.gitignore`
+- Never expose Supabase service-role key to frontend
+- Sanitize user input
+- Prevent duplicate records
+
+Create:
+
+.env.example
+
+with placeholders such as:
+
+LEETCODE_API_URL=
+SUPABASE_URL=
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+WHATSAPP_ACCESS_TOKEN=
+WHATSAPP_PHONE_NUMBER_ID=
+
+Never put real credentials in the repository.
+
+---
+
+# 12. Project Structure
+
+Use a clean structure similar to:
+
+leetcode-tracker/
+
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   ├── hooks/
+│   │   ├── utils/
+│   │   └── App.jsx
+│   ├── package.json
+│   └── vite.config.js
+│
+├── worker/
+│   ├── src/
+│   │   ├── services/
+│   │   │   ├── leetcode.js
+│   │   │   ├── whatsapp.js
+│   │   │   └── database.js
+│   │   ├── routes/
+│   │   ├── cron.js
+│   │   └── index.js
+│   ├── wrangler.toml
+│   └── package.json
+│
+├── database/
+│   └── schema.sql
+│
+├── .env.example
+├── .gitignore
+├── README.md
+└── package.json
+
+Adjust the structure if there is a better architecture, but keep it beginner-friendly.
+
+---
+
+# 13. UI/UX
+
+Use Tailwind CSS.
+
+The UI should have:
+
+- Clean dashboard
+- Responsive design
+- Dark/light mode if practical
+- Loading states
+- Error states
+- Empty states
+- Toast notifications
+- Good typography
+- Mobile responsiveness
+
+Do not make the UI unnecessarily complicated.
+
+---
+
+# 14. Dashboard Improvements
+
+Add useful statistics:
+
+- Total solved
+- Easy / Medium / Hard
+- Recent submissions
+- Last checked time
+- Notification status
+- Tracking status
+
+Example:
+
+Tracking Status: 🟢 Active
+
+Last checked:
+2 minutes ago
+
+WhatsApp:
+🟢 Enabled
+
+---
+
+# 15. Testing
+
+Create tests for the important backend logic.
+
+Especially test:
+
+1. New submission detection
+2. Duplicate submission detection
+3. Accepted vs rejected submission
+4. Duplicate notification prevention
+5. WhatsApp failure handling
+6. Database failure handling
+
+The core notification logic should be testable without actually calling WhatsApp.
+
+Use mocked API responses.
+
+---
+
+# 16. Deployment
+
+Provide complete deployment instructions.
+
+### GitHub
+
+Explain:
+
+git init
+git add .
+git commit
+git push
+
+### Supabase
+
+Explain:
+
+1. Create project.
+2. Create database.
+3. Run schema.sql.
+4. Obtain required credentials.
+
+### Cloudflare
+
+Explain:
+
+1. Create Cloudflare account.
+2. Install Wrangler.
+3. Authenticate.
+4. Configure Worker.
+5. Add environment variables/secrets.
+6. Deploy Worker.
+7. Configure Cron Trigger.
+
+### Frontend
+
+Deploy React frontend to Cloudflare Pages.
+
+Explain:
+
+- Build command
+- Output directory
+- Environment variables
+- Backend API URL
+
+---
+
+# 17. README
+
+Generate a professional README containing:
+
+- Project overview
+- Features
+- Architecture
+- Tech stack
+- Screenshots placeholder
+- Local setup
+- Environment variables
+- Database setup
+- WhatsApp setup
+- Deployment
+- Cron configuration
+- API documentation
+- Troubleshooting
+- Future improvements
+
+---
+
+# 18. Important Development Rule
+
+Do NOT generate the entire project blindly in one step.
+
+Build it incrementally.
+
+Follow this order:
+
+### Phase 1
+Create project structure and React frontend.
+
+### Phase 2
+Build the LeetCode profile lookup.
+
+### Phase 3
+Create Supabase database.
+
+### Phase 4
+Build backend API.
+
+### Phase 5
+Implement submission tracking.
+
+### Phase 6
+Implement duplicate detection.
+
+### Phase 7
+Implement scheduled Cloudflare Cron job.
+
+### Phase 8
+Implement notification abstraction.
+
+### Phase 9
+Integrate WhatsApp Cloud API.
+
+### Phase 10
+Build dashboard statistics.
+
+### Phase 11
+Add error handling/security.
+
+### Phase 12
+Deploy everything.
+
+After each phase:
+
+- Explain what was implemented.
+- Show changed files.
+- Give commands to run/test it.
+- Mention any required environment variables.
+- Do not move to the next phase until the current phase works.
+
+## Final Goal
+
+The final deployed application should allow:
+
+User → Enter LeetCode username + phone number → Start Tracking
+
+Then automatically:
+
+LeetCode
+↓
+Periodic checker
+↓
+New accepted problem detected
+↓
+Database
+↓
+WhatsApp notification
+
+The final project should be suitable for deployment and as a portfolio/resume project.
