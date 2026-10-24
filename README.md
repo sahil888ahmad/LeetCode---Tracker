@@ -2,6 +2,7 @@
   <img src="https://upload.wikimedia.org/wikipedia/commons/1/19/LeetCode_logo_black.png" alt="LeetCode Logo" width="100"/>
   <h1>LeetCode Tracker 🚀</h1>
   <p><strong>An automated, real-time LeetCode progress tracker with Telegram notifications.</strong></p>
+  <p>🔗 <strong>Live Website:</strong> <a href="https://frontend.leetcode-tracker-sahil.workers.dev" target="_blank">frontend.leetcode-tracker-sahil.workers.dev</a></p>
   
   [![Cloudflare Workers](https://img.shields.io/badge/Deployed%20on-Cloudflare%20Workers-F38020?style=for-the-badge&logo=cloudflare)](https://workers.cloudflare.com/)
   [![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react)](https://reactjs.org/)
