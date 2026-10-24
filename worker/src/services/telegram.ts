@@ -39,7 +39,6 @@ export async function sendTelegramNotification(
       body: JSON.stringify({
         chat_id: chatId,
         text: text,
-        parse_mode: 'HTML',
       }),
     });
 
@@ -67,15 +66,24 @@ export async function sendTelegramNotification(
 export function formatSubmissionMessage(
   username: string,
   problemName: string,
-  stats: { total: number; easy: number; medium: number; hard: number }
+  stats: { total: number; easy: number; medium: number; hard: number; totalSubmissions?: number },
+  isRepeat?: boolean
 ): string {
+  const problemHeader = isRepeat
+    ? `📝 Problem: ${problemName} 🔁 (Re-solved)`
+    : `📝 Problem: ${problemName}`;
+
+  const submissionsLine = stats.totalSubmissions
+    ? `\n📊 Total Submissions: ${stats.totalSubmissions}`
+    : '';
+
   return (
-    `👤 <b>User:</b> <code>${username}</code>\n` +
-    `📝 <b>Problem:</b> <code>${problemName}</code>\n\n` +
-    `✅ <b>Total Solved:</b> <b>${stats.total}</b>\n` +
-    `🟢 <b>Easy:</b> ${stats.easy}\n` +
-    `🟡 <b>Medium:</b> ${stats.medium}\n` +
-    `🔴 <b>Hard:</b> ${stats.hard}\n\n` +
-    `🔗 https://leetcode.com/${username}/`
+    `👤 User: ${username}\n` +
+    `${problemHeader}\n\n` +
+    `✅ Problems Solved: ${stats.total}\n` +
+    `🟢 Easy: ${stats.easy}\n` +
+    `🟡 Medium: ${stats.medium}\n` +
+    `🔴 Hard: ${stats.hard}` +
+    submissionsLine
   );
 }

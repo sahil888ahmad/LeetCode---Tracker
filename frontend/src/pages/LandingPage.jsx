@@ -4,253 +4,373 @@ import { api } from '../services/api'
 
 const features = [
   {
-    icon: '🔍',
+    tag: 'DETECT.01',
     title: 'Auto-Detection',
     desc: 'Automatically checks your LeetCode profile every 15 minutes and detects new accepted solutions.',
+    status: '[ACTIVE]',
   },
   {
-    icon: '📱',
+    tag: 'DISPATCH.02',
     title: 'Telegram Alerts',
     desc: 'Receive instant Telegram notifications via the official bot API — completely free and reliable.',
+    status: '[READY]',
   },
   {
-    icon: '📊',
+    tag: 'METRICS.03',
     title: 'Live Dashboard',
-    desc: 'Track your Easy, Medium, and Hard counts with a beautiful real-time stats dashboard.',
+    desc: 'Track your Easy, Medium, and Hard counts with a real-time monospaced telemetry dashboard.',
+    status: '[READY]',
   },
   {
-    icon: '🛡️',
+    tag: 'FILTER.04',
     title: 'No Duplicates',
     desc: 'Our idempotent system guarantees you never receive the same notification twice.',
+    status: '[VERIFIED]',
   },
   {
-    icon: '⚡',
+    tag: 'EDGE.05',
     title: 'Lightning Fast',
     desc: 'Powered by Cloudflare Workers — runs at the edge, globally distributed, zero cold starts.',
+    status: '[OPERATIONAL]',
   },
   {
-    icon: '🔒',
+    tag: 'SECURE.06',
     title: 'Privacy First',
     desc: 'Your credentials stay encrypted in our database. Nothing is ever exposed to the frontend.',
+    status: '[ENCRYPTED]',
   },
 ]
 
 const steps = [
   {
+    num: '01',
     title: 'Get Your Chat ID',
     desc: 'Message @userinfobot on Telegram to get your numeric Chat ID securely.',
   },
   {
+    num: '02',
     title: 'Register Your Profile',
     desc: 'Enter your LeetCode username and Telegram Chat ID. We verify your profile instantly.',
   },
   {
+    num: '03',
     title: 'Solve Problems',
     desc: 'Go solve LeetCode problems like you normally do — our tracker watches in the background.',
   },
   {
+    num: '04',
     title: 'Get Notified',
-    desc: 'Receive a Telegram message within 15 minutes every time you get an Accepted submission. 🎉',
+    desc: 'Receive a Telegram message within 15 minutes every time you get an Accepted submission.',
   },
 ]
 
 const techs = [
-  { icon: '⚛️', name: 'React + Vite' },
-  { icon: '☁️', name: 'Cloudflare Workers' },
-  { icon: '🗄️', name: 'Supabase PostgreSQL' },
-  { icon: '📱', name: 'Telegram Bot API' },
-  { icon: '⏱️', name: 'Cron Triggers' },
-  { icon: '🎨', name: 'Vanilla CSS' },
+  { name: 'React 19 + Vite 8', role: 'Client Single Page Session' },
+  { name: 'Cloudflare Workers', role: 'Edge Serverless Execution' },
+  { name: 'Supabase PostgreSQL', role: 'Relational Store & Telemetry' },
+  { name: 'Telegram Bot API', role: 'Direct Push Notification Dispatch' },
+  { name: 'Cron Triggers', role: '15-Minute Automated Evaluation Bus' },
+  { name: 'TerminalPlex Mono', role: 'Character-Aligned Design System' },
 ]
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '—'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  return `${days}d ago`
+}
+
+function getProblemSlug(title) {
+  if (!title) return ''
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
 
 export default function LandingPage() {
   const navigate = useNavigate()
   const [feed, setFeed] = useState([])
   const [loadingFeed, setLoadingFeed] = useState(true)
-
-  useEffect(() => {
-    const telegramId = localStorage.getItem('lct_telegram_id')
-    if (telegramId) {
-      navigate(`/dashboard`)
-    }
-  }, [navigate])
+  const telegramId = localStorage.getItem('lct_telegram_id')
 
   useEffect(() => {
     api.getFeed()
-      .then((res) => setFeed(res.data))
+      .then((res) => setFeed(res.data || []))
       .catch((err) => console.error('Failed to load feed:', err))
       .finally(() => setLoadingFeed(false))
   }, [])
 
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────────── */}
+      {/* ── Hero Opening ─────────────────────────────────────────── */}
       <section className="hero">
-        <div className="container hero-content animate-fadeInUp">
-          <div className="hero-eyebrow">
-            <span>⚡</span> Free Telegram Notifications
-          </div>
-          <h1 className="hero-title">
-            Track Your LeetCode
-            <br />
-            <span className="gradient-text">Progress Automatically</span>
-          </h1>
-          <p className="hero-subtitle">
-            Solve a problem on LeetCode and get a Telegram notification within minutes.
-            No manual checking. Just code — we handle the rest.
-          </p>
-          <div className="hero-cta">
-            <button className="btn btn-primary" onClick={() => navigate('/track')}>
-              🚀 Start Tracking Free
-            </button>
-            <a
-              href="#how-it-works"
-              className="btn btn-secondary"
-            >
-              How It Works
-            </a>
+        <div className="container">
+          {/* Character-rendered wordmark derived from customer name */}
+          <div className="sr-only">LeetCode Tracker</div>
+          <pre className="ascii-banner" aria-hidden="true">{` _     _____ _____ _____ ____ ___  ____  _____   _____ ____      _    ____ _  _______ ____  
+| |   | ____| ____|_   _/ ___/ _ \\|  _ \\| ____| |_   _|  _ \\    / \\  / ___| |/ / ____|  _ \\ 
+| |   |  _| |  _|   | || |  | | | | | | |  _|     | | | |_) |  / _ \\| |   | ' /|  _| | |_) |
+| |___| |___| |___  | || |__| |_| | |_| | |___    | | |  _ <  / ___ \\ |___| . \\| |___|  _ < 
+|_____|_____|_____| |_| \\____\\___/|____/|_____|   |_| |_| \\_\\/_/   \\_\\____|_|\\_\\_____|_| \\_\\`}</pre>
+
+          <div className="hero-grid">
+            <div>
+              <div style={{ fontSize: 13, color: 'var(--dp-color-ink-muted)', marginBottom: 12 }}>
+                // PROTOCOL: TELEGRAM NOTIFICATIONS // FREE TIER
+              </div>
+              <h1 className="hero-title">
+                Track Your LeetCode Progress Automatically
+              </h1>
+              <p className="hero-subtitle">
+                Solve a problem on LeetCode and receive an immediate Telegram alert within minutes.
+                Zero manual verification. Keep coding while background cron workers handle detection.
+              </p>
+              <div className="hero-cta">
+                {telegramId ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    [ Go to My Dashboard ]
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    onClick={() => navigate('/track')}
+                  >
+                    [ Start Tracking Free ]
+                  </button>
+                )}
+                <a href="#global-activity" className="btn btn-secondary">
+                  [ View Live Feed ]
+                </a>
+              </div>
+            </div>
+
+            {/* Narrow list of supporting facts */}
+            <aside className="hero-facts" aria-label="System Specifications">
+              <div className="hero-facts-title">// SPECIFICATIONS</div>
+              <div className="hero-fact-row">
+                <span className="hero-fact-key">INTERVAL</span>
+                <span className="hero-fact-val">15 Minutes</span>
+              </div>
+              <div className="hero-fact-row">
+                <span className="hero-fact-key">DISPATCH</span>
+                <span className="hero-fact-val">Telegram Bot API</span>
+              </div>
+              <div className="hero-fact-row">
+                <span className="hero-fact-key">DETECTION</span>
+                <span className="hero-fact-val">Idempotent</span>
+              </div>
+              <div className="hero-fact-row">
+                <span className="hero-fact-key">STORAGE</span>
+                <span className="hero-fact-val">Encrypted / PostgreSQL</span>
+              </div>
+              <div className="hero-fact-row">
+                <span className="hero-fact-key">COST</span>
+                <span className="hero-fact-val">Free Forever</span>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
 
-      {/* ── Recent Activity Feed ──────────────────────────── */}
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="container" style={{ maxWidth: 800 }}>
-          <div className="section-header" style={{ marginBottom: 32 }}>
-            <h2 className="section-title" style={{ fontSize: '2rem' }}>
-              Live <span className="gradient-text">Global Activity</span>
-            </h2>
-            <p className="section-subtitle">See what others are solving right now.</p>
-          </div>
-          
-          <div className="dashboard-card animate-fadeInUp">
-            {loadingFeed ? (
-              <div style={{ textAlign: 'center', padding: '2rem' }}>Loading recent activity...</div>
-            ) : feed.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>
-                No recent submissions found. Be the first!
+      {/* ── 01 // Live Global Activity Feed ──────────────────────── */}
+      <section className="section" id="global-activity">
+        <div className="container">
+          <div className="command-layout">
+            <div className="command-gutter">01 // FEED</div>
+            <div className="command-output">
+              <div className="section-header">
+                <h2 className="section-title">Live Global Activity</h2>
+                <p className="section-subtitle">
+                  Real-time problem solves across all tracked competitive programmers.
+                </p>
               </div>
-            ) : (
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>User</th>
-                      <th>Problem</th>
-                      <th>Difficulty</th>
-                      <th>Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {feed.map((s) => (
-                      <tr key={s.id}>
-                        <td><strong>{s.users.leetcode_username}</strong></td>
-                        <td>{s.title}</td>
-                        <td>
-                          <span className={`difficulty-badge diff-${s.difficulty?.toLowerCase()}`}>
-                            {s.difficulty}
-                          </span>
-                        </td>
-                        <td style={{ color: 'var(--text-secondary)' }}>
-                          {new Date(s.submitted_at).toLocaleString()}
-                        </td>
+
+              {loadingFeed ? (
+                <div style={{ padding: '24px 0', color: 'var(--dp-color-ink-muted)' }}>
+                  &gt;&gt; Querying telemetry feed...
+                </div>
+              ) : feed.length === 0 ? (
+                <div className="empty-state">
+                  <div className="empty-state-title">&gt; FEED_EMPTY</div>
+                  <p style={{ margin: 0, color: 'var(--dp-color-ink-muted)' }}>
+                    No recent submissions recorded. Execute problems on LeetCode to populate telemetry.
+                  </p>
+                </div>
+              ) : (
+                <div className="table-wrapper">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">USER</th>
+                        <th scope="col">PROBLEM_TITLE</th>
+                        <th scope="col">DIFFICULTY</th>
+                        <th scope="col">LANGUAGE</th>
+                        <th scope="col">TIMESTAMP</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {feed.map((s) => {
+                        const username = s.users?.leetcode_username || 'Anonymous'
+                        const title = s.title || 'Untitled Problem'
+                        const slug = getProblemSlug(title)
+                        return (
+                          <tr key={s.id}>
+                            <td>
+                              <a
+                                href={`https://leetcode.com/${username}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--dp-color-ink)', fontWeight: 500 }}
+                              >
+                                @{username}
+                              </a>
+                            </td>
+                            <td>
+                              <a
+                                href={`https://leetcode.com/problems/${slug}/`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ color: 'var(--dp-color-emphasis)' }}
+                              >
+                                &gt; {title}
+                              </a>
+                            </td>
+                            <td>
+                              <span className={`badge badge-${s.difficulty?.toLowerCase() || 'muted'}`}>
+                                [{s.difficulty ? s.difficulty.toUpperCase() : 'UNKNOWN'}]
+                              </span>
+                            </td>
+                            <td>
+                              <code>{s.language || '—'}</code>
+                            </td>
+                            <td>
+                              <span style={{ color: 'var(--dp-color-ink-muted)', fontSize: 13 }}>
+                                {timeAgo(s.submitted_at)}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Features ──────────────────────────────────────── */}
+      {/* ── 02 // Capabilities ────────────────────────────────────── */}
       <section className="section" id="features">
         <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Everything You Need to <span className="gradient-text">Stay Consistent</span>
-            </h2>
-            <p className="section-subtitle">
-              Built for competitive programmers who want accountability without friction.
-            </p>
-          </div>
-          <div className="features-grid">
-            {features.map((f) => (
-              <div className="feature-card" key={f.title}>
-                <div className="feature-icon">{f.icon}</div>
-                <div className="feature-title">{f.title}</div>
-                <p className="feature-desc">{f.desc}</p>
+          <div className="command-layout">
+            <div className="command-gutter">02 // SPECS</div>
+            <div className="command-output">
+              <div className="section-header">
+                <h2 className="section-title">Everything You Need to Stay Consistent</h2>
+                <p className="section-subtitle">
+                  Built for competitive programmers who want accountability without friction.
+                </p>
               </div>
-            ))}
+
+              <div className="capability-list">
+                {features.map((f) => (
+                  <div className="capability-row" key={f.title}>
+                    <div className="capability-title">&gt; {f.title}</div>
+                    <p className="capability-desc">{f.desc}</p>
+                    <div className="capability-status">{f.status}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── How It Works ──────────────────────────────────── */}
-      <section className="section" id="how-it-works" style={{ background: 'var(--bg-secondary)' }}>
+      {/* ── 03 // Execution Steps ─────────────────────────────────── */}
+      <section className="section" id="how-it-works">
         <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Up &amp; Running in <span className="gradient-text">4 Steps</span>
-            </h2>
-            <p className="section-subtitle">No complex setup. Just follow these steps and you're done.</p>
-          </div>
-          <div className="steps" style={{ marginTop: 48 }}>
-            {steps.map((s, i) => (
-              <div className="step" key={s.title}>
-                <div className="step-num">{i + 1}</div>
-                <div className="step-body">
-                  <div className="step-title">{s.title}</div>
-                  <p className="step-desc">{s.desc}</p>
-                </div>
+          <div className="command-layout">
+            <div className="command-gutter">03 // SETUP</div>
+            <div className="command-output">
+              <div className="section-header">
+                <h2 className="section-title">Up &amp; Running in 4 Steps</h2>
+                <p className="section-subtitle">
+                  No complex setup. Follow these sequential steps to configure your watcher.
+                </p>
               </div>
-            ))}
+
+              <div className="steps-list">
+                {steps.map((s) => (
+                  <div className="step-row" key={s.num}>
+                    <div className="step-num-code">[{s.num}]</div>
+                    <div className="step-name">{s.title}</div>
+                    <p className="step-text">{s.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Tech Stack ────────────────────────────────────── */}
+      {/* ── 04 // Tech Stack ──────────────────────────────────────── */}
       <section className="section" id="tech">
         <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">
-              Built on <span className="gradient-text">Modern Tech</span>
-            </h2>
-            <p className="section-subtitle">
-              100% free-tier stack — deployable by anyone, anywhere.
-            </p>
-          </div>
-          <div className="tech-grid">
-            {techs.map((t) => (
-              <div className="tech-pill" key={t.name}>
-                <span>{t.icon}</span>
-                <span>{t.name}</span>
+          <div className="command-layout">
+            <div className="command-gutter">04 // ARCH</div>
+            <div className="command-output">
+              <div className="section-header">
+                <h2 className="section-title">Built on Modern Tech</h2>
+                <p className="section-subtitle">
+                  100% free-tier stack — edge compute, relational storage, and serverless triggers.
+                </p>
               </div>
-            ))}
+
+              <div className="tech-table">
+                {techs.map((t) => (
+                  <div className="tech-row" key={t.name}>
+                    <div className="tech-name">&gt; {t.name}</div>
+                    <div className="tech-role">{t.role}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── CTA Banner ────────────────────────────────────── */}
-      <section
-        className="section"
-        style={{
-          background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(168,85,247,0.1) 100%)',
-          borderTop: '1px solid var(--border)',
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <div className="container" style={{ textAlign: 'center' }}>
-          <h2 className="section-title">
-            Ready to Never Miss a <span className="gradient-text">Solved Problem?</span>
-          </h2>
-          <p className="section-subtitle" style={{ marginBottom: 36, marginTop: 12 }}>
-            Takes less than 2 minutes to set up. Free forever.
-          </p>
-          <button className="btn btn-primary" onClick={() => navigate('/track')} style={{ fontSize: 16, padding: '16px 36px' }}>
-            🚀 Get Started Now
-          </button>
+      {/* ── 05 // Execution Call ──────────────────────────────────── */}
+      <section className="section" id="enroll">
+        <div className="container">
+          <div className="command-layout">
+            <div className="command-gutter">05 // EXEC</div>
+            <div className="command-output">
+              <div style={{ border: 'var(--dp-border-hairline) solid var(--dp-color-rule)', padding: 'var(--dp-spacing-row)' }}>
+                <h2 className="section-title" style={{ marginBottom: 12 }}>
+                  Ready to Never Miss a Solved Problem?
+                </h2>
+                <p className="section-subtitle" style={{ marginBottom: 24 }}>
+                  Takes less than 2 minutes to set up. Free forever.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => navigate('/track')}
+                >
+                  [ &gt; Get Started Now ]
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </>

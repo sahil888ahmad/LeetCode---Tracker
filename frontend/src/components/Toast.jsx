@@ -1,16 +1,29 @@
-import { useEffect } from 'react'
+export function Toast({ id, message, type, onRemove }) {
+  const typeTag = {
+    success: '[OK]',
+    error: '[ERR]',
+    info: '[MSG]',
+  }[type] || '[SYS]'
 
-function Toast({ id, message, type, onRemove }) {
-  const icons = { success: '✅', error: '❌', info: 'ℹ️' }
   return (
-    <div className={`toast toast-${type}`}>
-      <span>{icons[type] || icons.info}</span>
+    <div className={`toast toast-${type}`} role="status">
+      <span style={{ fontWeight: 600 }}>{typeTag}</span>
       <span style={{ flex: 1 }}>{message}</span>
       <button
+        type="button"
         onClick={() => onRemove(id)}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 16 }}
+        aria-label="Dismiss notification"
+        style={{
+          background: 'none',
+          border: 'none',
+          cursor: 'pointer',
+          color: 'inherit',
+          fontFamily: 'inherit',
+          fontSize: 14,
+          padding: '0 4px',
+        }}
       >
-        ✕
+        [X]
       </button>
     </div>
   )
@@ -18,8 +31,8 @@ function Toast({ id, message, type, onRemove }) {
 
 export default function ToastContainer({ toasts, onRemove }) {
   return (
-    <div className="toast-container">
-      {toasts.map(t => (
+    <div className="toast-container" aria-live="polite">
+      {toasts.map((t) => (
         <Toast key={t.id} {...t} onRemove={onRemove} />
       ))}
     </div>

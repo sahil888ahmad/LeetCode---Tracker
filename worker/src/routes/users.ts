@@ -55,6 +55,12 @@ export async function handleCreateUser(req: Request, env: Env): Promise<Response
   // Check if user already exists
   const existing = await getUserByUsername(env, username);
   if (existing) {
+    // Update telegram_chat_id to the new one if it's different
+    if (existing.telegram_chat_id !== chatId) {
+      const { updateTelegramId } = await import('../services/database');
+      await updateTelegramId(env, existing.id, chatId);
+      existing.telegram_chat_id = chatId;
+    }
     return json({ success: true, user: existing, alreadyExists: true });
   }
 

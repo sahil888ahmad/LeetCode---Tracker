@@ -12,6 +12,7 @@ export interface LeetCodeProfile {
   easySolved: number;
   mediumSolved: number;
   hardSolved: number;
+  totalSubmissions?: number;
   exists: boolean;
 }
 
@@ -37,6 +38,7 @@ export async function fetchUserProfile(username: string): Promise<LeetCodeProfil
           acSubmissionNum {
             difficulty
             count
+            submissions
           }
         }
       }
@@ -66,6 +68,7 @@ export async function fetchUserProfile(username: string): Promise<LeetCodeProfil
       easySolved: 0,
       mediumSolved: 0,
       hardSolved: 0,
+      totalSubmissions: 0,
       exists: false,
     };
   }
@@ -73,6 +76,8 @@ export async function fetchUserProfile(username: string): Promise<LeetCodeProfil
   const stats = user.submitStats?.acSubmissionNum || [];
   const getCount = (diff: string) =>
     stats.find((s: any) => s.difficulty === diff)?.count || 0;
+  const getSubmissions = (diff: string) =>
+    stats.find((s: any) => s.difficulty === diff)?.submissions || 0;
 
   return {
     username: user.username,
@@ -80,6 +85,7 @@ export async function fetchUserProfile(username: string): Promise<LeetCodeProfil
     easySolved: getCount('Easy'),
     mediumSolved: getCount('Medium'),
     hardSolved: getCount('Hard'),
+    totalSubmissions: getSubmissions('All'),
     exists: true,
   };
 }
@@ -91,7 +97,7 @@ export async function fetchUserProfile(username: string): Promise<LeetCodeProfil
 export async function fetchRecentSubmissions(username: string): Promise<LeetCodeSubmission[]> {
   const query = `
     query getRecentSubmissions($username: String!, $limit: Int!) {
-      recentSubmissionList(username: $username, limit: $limit) {
+      recentAcSubmissionList(username: $username, limit: $limit) {
         id
         title
         titleSlug
@@ -119,7 +125,7 @@ export async function fetchRecentSubmissions(username: string): Promise<LeetCode
   }
 
   const data: any = await res.json();
-  const submissions: LeetCodeSubmission[] = data?.data?.recentSubmissionList || [];
+  const submissions: LeetCodeSubmission[] = data?.data?.recentAcSubmissionList || [];
 
   // Return only accepted submissions
   return submissions.filter((s) => s.statusDisplay === 'Accepted');

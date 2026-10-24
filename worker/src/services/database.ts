@@ -16,15 +16,14 @@ export interface User {
   medium_solved: number;
   hard_solved: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface Submission {
   id: string;
   user_id: string;
   leetcode_submission_id: number;
-  problem_name: string;
-  problem_slug: string | null;
+  title: string;
   difficulty: string | null;
   language: string | null;
   status: string;
@@ -40,7 +39,7 @@ export interface CreateUserInput {
 
 export interface CreateSubmissionInput {
   user_id: string;
-  leetcode_submission_id: string;
+  leetcode_submission_id: number;
   title: string;
   difficulty: string;
   language: string;
@@ -142,7 +141,7 @@ export async function updateUserStats(
   const supabase = getSupabase(env);
   const { error } = await supabase
     .from('users')
-    .update({ ...stats, updated_at: new Date().toISOString() })
+    .update({ ...stats })
     .eq('id', userId);
 
   if (error) throw new Error(`DB updateUserStats failed: ${error.message}`);
@@ -156,10 +155,24 @@ export async function toggleNotifications(
   const supabase = getSupabase(env);
   const { error } = await supabase
     .from('users')
-    .update({ notification_enabled: enabled, updated_at: new Date().toISOString() })
+    .update({ notification_enabled: enabled })
     .eq('id', userId);
 
   if (error) throw new Error(`DB toggleNotifications failed: ${error.message}`);
+}
+
+export async function updateTelegramId(
+  env: { SUPABASE_URL: string; SUPABASE_SERVICE_ROLE_KEY: string },
+  userId: string,
+  telegramChatId: string
+): Promise<void> {
+  const supabase = getSupabase(env);
+  const { error } = await supabase
+    .from('users')
+    .update({ telegram_chat_id: telegramChatId })
+    .eq('id', userId);
+
+  if (error) throw new Error(`DB updateTelegramId failed: ${error.message}`);
 }
 
 export async function deleteUser(
@@ -204,6 +217,25 @@ export async function submissionExists(
   if (error?.code === 'PGRST116') return false;
   if (error) throw new Error(`DB submissionExists failed: ${error.message}`);
   return !!data;
+}
+
+export async function getExistingSubmissionIds(
+  env: { SUPABASE_URL: string; SUPABASE_SERVICE_ROLE_KEY: string },
+  submissionIds: number[]
+): Promise<Set<number>> {
+  if (!submissionIds || submissionIds.length === 0) return new Set();
+  const supabase = getSupabase(env);
+  const { data, error } = await supabase
+    .from('submissions')
+    .select('leetcode_submission_id')
+    .in('leetcode_submission_id', submissionIds);
+
+  if (error) throw new Error(`DB getExistingSubmissionIds failed: ${error.message}`);
+  const set = new Set<number>();
+  for (const row of data || []) {
+    set.add(Number(row.leetcode_submission_id));
+  }
+  return set;
 }
 
 export async function createSubmission(
@@ -257,3 +289,21 @@ export async function getRecentGlobalSubmissions(
   if (error) throw new Error(`DB getRecentGlobalSubmissions failed: ${error.message}`);
   return data || [];
 }
+
+export async function hasProblemBeenSolvedBefore(
+  env: { SUPABASE_URL: string; SUPABASE_SERVICE_ROLE_KEY: string },
+  userId: string,
+  title: string
+): Promise<boolean> {
+  const supabase = getSupabase(env);
+  const { data, error } = await supabase
+    .from('submissions')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('title', title)
+    .limit(1);
+
+  if (error || !data) return false;
+  return data.length > 0;
+}
+

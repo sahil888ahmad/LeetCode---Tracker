@@ -14,10 +14,11 @@
 import { Env } from './index';
 import {
   getAllActiveUsers,
-  submissionExists,
+  getExistingSubmissionIds,
   createSubmission,
   markNotificationSent,
   updateUserStats,
+  hasProblemBeenSolvedBefore,
 } from './services/database';
 import {
   fetchRecentSubmissions,
@@ -67,14 +68,19 @@ async function checkUserSubmissions(user: any, env: Env): Promise<void> {
   }
 
   // Process each accepted submission
+  const submissionIds = submissions.map((s) => parseInt(s.id, 10));
+  const existingIdSet = await getExistingSubmissionIds(env, submissionIds);
+
   for (const sub of submissions) {
     const submissionId = parseInt(sub.id, 10);
 
     // Skip if already processed (idempotency)
-    const alreadyExists = await submissionExists(env, submissionId);
-    if (alreadyExists) continue;
+    if (existingIdSet.has(submissionId)) continue;
 
     console.log(`[Cron] New submission detected for ${username}: ${sub.title} (ID: ${submissionId})`);
+
+    // Check if this problem was solved before by this user
+    const isRepeat = await hasProblemBeenSolvedBefore(env, user.id, sub.title);
 
     // Fetch difficulty (separate query since recentSubmissionList doesn't include it)
     const difficulty = await fetchProblemDifficulty(sub.titleSlug);
@@ -102,9 +108,10 @@ async function checkUserSubmissions(user: any, env: Env): Promise<void> {
         total: profile.totalSolved,
         easy: profile.easySolved,
         medium: profile.mediumSolved,
-        hard: profile.hardSolved
+        hard: profile.hardSolved,
+        totalSubmissions: profile.totalSubmissions,
       };
-      const message = formatSubmissionMessage(username, sub.title, stats);
+      const message = formatSubmissionMessage(username, sub.title, stats, isRepeat);
       
       // Need TELEGRAM_BOT_TOKEN in env
       if (!env.TELEGRAM_BOT_TOKEN) {

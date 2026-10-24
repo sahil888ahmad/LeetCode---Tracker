@@ -4,9 +4,10 @@ function DifficultyBadge({ difficulty }) {
     Medium: 'badge-medium',
     Hard: 'badge-hard',
   }
+  const text = difficulty ? difficulty.toUpperCase() : 'UNKNOWN'
   return (
     <span className={`badge ${map[difficulty] || 'badge-muted'}`}>
-      {difficulty || 'Unknown'}
+      [{text}]
     </span>
   )
 }
@@ -23,14 +24,18 @@ function timeAgo(dateStr) {
   return `${days}d ago`
 }
 
+function getProblemSlug(title) {
+  if (!title) return ''
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+}
+
 export default function SubmissionTable({ submissions }) {
   if (!submissions || submissions.length === 0) {
     return (
       <div className="empty-state">
-        <div className="empty-state-icon">📭</div>
-        <div className="empty-state-title">No submissions yet</div>
-        <p style={{ fontSize: 14 }}>
-          Solve a LeetCode problem and it will appear here within 15 minutes!
+        <div className="empty-state-title">&gt; NO_DATA_RETURNED</div>
+        <p style={{ margin: 0, color: 'var(--dp-color-ink-muted)' }}>
+          Solve a problem on LeetCode; telemetry will synchronize within the next 15-minute interval.
         </p>
       </div>
     )
@@ -41,50 +46,58 @@ export default function SubmissionTable({ submissions }) {
       <table>
         <thead>
           <tr>
-            <th>Problem</th>
-            <th>Difficulty</th>
-            <th>Language</th>
-            <th>Status</th>
-            <th>Notified</th>
-            <th>Time</th>
+            <th scope="col">PROBLEM_TITLE</th>
+            <th scope="col">DIFFICULTY</th>
+            <th scope="col">LANGUAGE</th>
+            <th scope="col">STATUS</th>
+            <th scope="col">DISPATCH</th>
+            <th scope="col">TIMESTAMP</th>
           </tr>
         </thead>
         <tbody>
-          {submissions.map((sub) => (
-            <tr key={sub.id}>
-              <td>
-                {sub.problem_slug ? (
+          {submissions.map((sub) => {
+            const title = sub.title || sub.problem_name || 'Untitled Problem'
+            const slug = getProblemSlug(title)
+            return (
+              <tr key={sub.id}>
+                <td>
                   <a
-                    href={`https://leetcode.com/problems/${sub.problem_slug}`}
+                    href={`https://leetcode.com/problems/${slug}/`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: 'var(--text-primary)', fontWeight: 500 }}
+                    style={{ color: 'var(--dp-color-emphasis)' }}
                   >
-                    {sub.problem_name}
+                    &gt; {title}
                   </a>
-                ) : (
-                  sub.problem_name
-                )}
-              </td>
-              <td>
-                <DifficultyBadge difficulty={sub.difficulty} />
-              </td>
-              <td style={{ fontFamily: 'monospace', fontSize: 13 }}>{sub.language || '—'}</td>
-              <td>
-                <span className="badge badge-success">✓ {sub.status}</span>
-              </td>
-              <td>
-                {sub.notification_sent ? (
-                  <span style={{ color: 'var(--green)', fontSize: 13 }}>✅ Sent</span>
-                ) : (
-                  <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>Pending</span>
-                )}
-              </td>
-              <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                {timeAgo(sub.submitted_at)}
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>
+                  <DifficultyBadge difficulty={sub.difficulty} />
+                </td>
+                <td>
+                  <code>{sub.language || '—'}</code>
+                </td>
+                <td>
+                  <span className="badge badge-success">✓ {sub.status || 'Accepted'}</span>
+                </td>
+                <td>
+                  {sub.notification_sent ? (
+                    <span style={{ color: 'var(--dp-color-ink)', fontSize: 13 }}>
+                      [SENT]
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--dp-color-ink-muted)', fontSize: 13 }}>
+                      [QUEUED]
+                    </span>
+                  )}
+                </td>
+                <td>
+                  <span style={{ color: 'var(--dp-color-ink-muted)', fontSize: 13 }}>
+                    {timeAgo(sub.submitted_at)}
+                  </span>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>

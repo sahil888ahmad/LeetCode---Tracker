@@ -1,16 +1,15 @@
-import { useState, useContext, useEffect } from 'react'
+import { useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 import { ToastContext } from '../App'
-import LoadingSpinner from '../components/LoadingSpinner'
 
 function Field({ label, hint, id, error, children }) {
   return (
     <div className="form-group">
       <label className="form-label" htmlFor={id}>{label}</label>
-      {hint && <span className="form-hint">{hint}</span>}
+      {hint && <span className="form-hint">// {hint}</span>}
       {children}
-      {error && <span className="form-error">⚠ {error}</span>}
+      {error && <span className="form-error">[ERR] {error}</span>}
     </div>
   )
 }
@@ -18,17 +17,11 @@ function Field({ label, hint, id, error, children }) {
 export default function TrackPage() {
   const navigate = useNavigate()
   const addToast = useContext(ToastContext)
-
-  useEffect(() => {
-    const telegramId = localStorage.getItem('lct_telegram_id')
-    if (telegramId) {
-      navigate(`/dashboard`)
-    }
-  }, [navigate])
+  const existingTelegramId = localStorage.getItem('lct_telegram_id')
 
   const [form, setForm] = useState({
     leetcode_username: '',
-    telegram_chat_id: '',
+    telegram_chat_id: existingTelegramId || '',
   })
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
@@ -59,122 +52,149 @@ export default function TrackPage() {
       localStorage.setItem('lct_telegram_id', telegramId)
 
       if (res.alreadyExists) {
-        addToast('Welcome back! Redirecting to your dashboard…', 'info')
+        addToast('Profile recognized. Redirecting to dashboard...', 'info')
       } else {
-        addToast('🎉 Tracker created! You will get Telegram alerts within 15 minutes.', 'success')
+        addToast('Tracker initialized. Alerts will trigger on new submissions.', 'success')
       }
       navigate(`/dashboard`)
     } catch (err) {
-      addToast(err.message || 'Something went wrong. Please try again.', 'error')
+      addToast(err.message || 'Operation failed. Verify profile data.', 'error')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div
-      style={{
-        minHeight: 'calc(100vh - 128px)',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '60px 24px',
-        background: 'var(--gradient-hero)',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: 560, margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div
-            style={{
-              width: 64, height: 64,
-              background: 'var(--gradient-accent)',
-              borderRadius: 16,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 28, margin: '0 auto 20px',
-            }}
-          >
-            ⚡
+    <div className="section" style={{ minHeight: 'calc(100vh - 140px)' }}>
+      <div className="container">
+        <div className="command-layout">
+          <div className="command-gutter">01 // REGISTER</div>
+          <div className="command-output">
+            <div className="section-header">
+              <h1 className="section-title">Configure Telemetry Watcher</h1>
+              <p className="section-subtitle">
+                Register your LeetCode profile and Telegram numeric ID for automated polling.
+              </p>
+            </div>
+
+            {/* Instruction Box */}
+            <div
+              style={{
+                border: 'var(--dp-border-hairline) solid var(--dp-color-rule)',
+                padding: 'var(--dp-spacing-row-compact)',
+                marginBottom: 'var(--dp-spacing-row)',
+                background: 'var(--dp-color-ground)',
+              }}
+            >
+              <div
+                style={{
+                  color: 'var(--dp-color-emphasis)',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  marginBottom: 10,
+                  letterSpacing: '0.05em',
+                }}
+              >
+                // PROTOCOL: RETRIEVE TELEGRAM CHAT ID
+              </div>
+              <ol
+                style={{
+                  fontSize: 14,
+                  color: 'var(--dp-color-ink-muted)',
+                  paddingLeft: '3ch',
+                  lineHeight: 'var(--dp-typography-list-leading)',
+                }}
+              >
+                <li>
+                  Open Telegram and dispatch a message to{' '}
+                  <strong style={{ color: 'var(--dp-color-emphasis)' }}>@userinfobot</strong>
+                </li>
+                <li>
+                  Send standard initialize command <code>/start</code>
+                </li>
+                <li>
+                  Capture the returned numerical <strong>Id</strong> (e.g. <code>123456789</code>)
+                </li>
+                <li>
+                  Verify your bot permissions so push dispatches are accepted.
+                </li>
+              </ol>
+            </div>
+
+            {/* Form Box */}
+            <div
+              style={{
+                border: 'var(--dp-border-hairline) solid var(--dp-color-rule)',
+                padding: 'var(--dp-spacing-row)',
+                background: 'var(--dp-color-ground)',
+                maxWidth: 680,
+              }}
+            >
+              <form onSubmit={handleSubmit}>
+                <Field
+                  id="username"
+                  label="LeetCode Username"
+                  hint="Public handle used in leetcode.com/username"
+                  error={errors.leetcode_username}
+                >
+                  <input
+                    id="username"
+                    className={`form-input ${errors.leetcode_username ? 'error' : ''}`}
+                    placeholder="e.g. neal_wu"
+                    value={form.leetcode_username}
+                    onChange={update('leetcode_username')}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </Field>
+
+                <Field
+                  id="telegram_chat_id"
+                  label="Telegram Numeric Chat ID"
+                  hint="Numeric identifier provided by @userinfobot"
+                  error={errors.telegram_chat_id}
+                >
+                  <input
+                    id="telegram_chat_id"
+                    className={`form-input ${errors.telegram_chat_id ? 'error' : ''}`}
+                    placeholder="e.g. 123456789"
+                    value={form.telegram_chat_id}
+                    onChange={update('telegram_chat_id')}
+                    type="text"
+                    autoComplete="off"
+                  />
+                </Field>
+
+                <div style={{ marginTop: 'var(--dp-spacing-row-compact)' }}>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                    style={{ width: '100%', padding: '12px 2ch' }}
+                  >
+                    {loading ? (
+                      <>
+                        [ VERIFYING PROFILE <span className="terminal-cursor" aria-hidden="true" /> ]
+                      </>
+                    ) : (
+                      '[ > EXECUTE: START TRACKING ]'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div
+              style={{
+                marginTop: 'var(--dp-spacing-row-compact)',
+                fontSize: 13,
+                color: 'var(--dp-color-ink-muted)',
+              }}
+            >
+              // NOTE: Chat ID is stored in Supabase PostgreSQL; never disclosed to public browser sessions.
+            </div>
           </div>
-          <h1 style={{ fontSize: 32, marginBottom: 8 }}>Start Tracking</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>
-            Enter your details below to receive Telegram alerts for every accepted submission.
-          </p>
         </div>
-
-        <div
-          style={{
-            background: 'rgba(99,102,241,0.08)',
-            border: '1px solid rgba(99,102,241,0.25)',
-            borderRadius: 12,
-            padding: '16px 20px',
-            marginBottom: 28,
-          }}
-        >
-          <p style={{ fontSize: 13, color: '#a5b4fc', fontWeight: 600, marginBottom: 8 }}>
-            📱 Step 1: Get your Telegram Chat ID (one-time)
-          </p>
-          <ol style={{ fontSize: 13, color: 'var(--text-secondary)', paddingLeft: 16, lineHeight: 1.8 }}>
-            <li>Open Telegram and search for <strong style={{ color: 'var(--text-primary)' }}>@userinfobot</strong></li>
-            <li>Send a message to the bot (e.g., <code style={{ background: 'rgba(255,255,255,0.07)', padding: '2px 6px', borderRadius: 4 }}>/start</code>)</li>
-            <li>It will reply with your <strong>Id</strong> (a number like <code style={{ background: 'rgba(255,255,255,0.07)', padding: '2px 6px', borderRadius: 4 }}>123456789</code>)</li>
-            <li>Start a chat with our bot (your bot link here) so it has permission to message you.</li>
-          </ol>
-        </div>
-
-        {/* Form */}
-        <div className="card" style={{ borderRadius: 20, padding: 32 }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-            <Field
-              id="username"
-              label="LeetCode Username"
-              hint="Your public LeetCode username (not email)"
-              error={errors.leetcode_username}
-            >
-              <input
-                id="username"
-                className={`form-input ${errors.leetcode_username ? 'error' : ''}`}
-                placeholder="e.g. neal_wu"
-                value={form.leetcode_username}
-                onChange={update('leetcode_username')}
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </Field>
-
-            <Field
-              id="telegram_chat_id"
-              label="Telegram Chat ID"
-              hint="Your numeric ID from @userinfobot"
-              error={errors.telegram_chat_id}
-            >
-              <input
-                id="telegram_chat_id"
-                className={`form-input ${errors.telegram_chat_id ? 'error' : ''}`}
-                placeholder="e.g. 123456789"
-                value={form.telegram_chat_id}
-                onChange={update('telegram_chat_id')}
-                type="text"
-              />
-            </Field>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading}
-              style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: 16 }}
-            >
-              {loading ? (
-                <><span className="spinner" style={{ borderTopColor: '#fff' }} /> Verifying profile…</>
-              ) : (
-                '🚀 Start Tracking'
-              )}
-            </button>
-          </form>
-        </div>
-
-        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--text-muted)', marginTop: 20 }}>
-          Your Chat ID is stored securely and never exposed to the browser.
-        </p>
       </div>
     </div>
   )

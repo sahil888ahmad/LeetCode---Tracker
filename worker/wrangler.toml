@@ -8,7 +8,7 @@ crons = ["*/15 * * * *"]
 
 [vars]
 ENVIRONMENT = "production"
-FRONTEND_URL = "https://leetcode-tracker-ui.leetcode-tracker-sahil.workers.dev"
+FRONTEND_URL = "https://frontend.leetcode-tracker-sahil.workers.dev"
 
 # Secrets (set via: wrangler secret put SECRET_NAME)
 # SUPABASE_URL
